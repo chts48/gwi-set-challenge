@@ -76,22 +76,20 @@ describe('API Testing with Cypress', () => {
 })
 
 
-let getPropertyValues = (array, property) => {
+let getPropertyValues = (array: object[], property: string) => {
     return array.map(item => item[property]);
 }
 
 
-let checkSorting = (items, isAscending) => {
+let checkSorting = (items: object[], isAscending: boolean) => {
     if (items.length > 1) {
         if (isAscending) {
             for (let i = 0; i <= (items.length - 2); i++) {
-                cy.log(`${items[i]} should be lower or equal to ${items[i + 1]}.`);
                 expect(items[i] <= items[i + 1]).to.be.true;
             }
         }
         else {
             for (let i = 0; i <= (items.length - 2); i++) {
-                cy.log(`${items[i]} should be higher or equal to ${items[i + 1]}.`);
                 expect(items[i] >= items[i + 1]).to.be.true;
             }
         }
