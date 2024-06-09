@@ -56,16 +56,20 @@ describe('E2E Test Suite for My Charts app', () => {
   it('should check Search field\'s initial state and functionality', () => {
 
     cy.get(SELECTORS.searchInput).should('have.attr', 'placeholder', 'Search charts');
-
     cy.get(SELECTORS.searchInput).should('have.value', '');
-    ['ch', 'T 2', 'This chart does not exist'].forEach(checkSearchInput);
+
+    //check that correct table records are returned
+    ['ch', 'T 2'].forEach(checkSearchInputThatReturnsTableRecords);
+
+    //check that no table records are returned
+    checkSearchInputWithNoTableRecords('This chart does not exist');
 
   })
 
 
   it('should check compatibility bewtween Search and Sorting functionalities', () => {
 
-    cy.get(SELECTORS.searchInput).type('chart');
+    typeSearchInput('chart');
     cy.get(SELECTORS.tableRows).its('length').should('be.gt', 1).then((length) => {
       checkAscendingSorting(0, false, length);
       [1, 2].forEach((elNumber) => {
@@ -82,6 +86,7 @@ describe('E2E Test Suite for My Charts app', () => {
     cy.clearLocalStorage();
 
   })
+
 
 
   let checkAscendingSorting = (elNumber: number, isDate: boolean, length: number) => {
@@ -106,36 +111,49 @@ describe('E2E Test Suite for My Charts app', () => {
           })
 
           cy.then(() => {
-            expect(value1 <= value2).to.be.true;
+            expect(value1 <= value2, `${value1} is not lower or equal to ${value2}`).to.be.true;
           })
         }
       }
     }
-    else cy.log('There are not enough records to assert the sorting');
+    else expect(true, 'There are not enough records to assert the sorting').to.be.false;
   }
 
 
-  let checkSearchInput = (searchText: string) => {
+  let checkSearchInputThatReturnsTableRecords = (searchText: string) => {
+
+    typeSearchInput(searchText);
+
+    cy.get(SELECTORS.tableRows).its('length').should('be.gt', 1).then((length) => {
+
+      for (let i = 1; i <= (length - 1); i++) {
+        cy.get(SELECTORS.tableRows).eq(i).find(SELECTORS.typographyItem).eq(0).invoke('text').then((text) => {
+          expect(text.toLowerCase()).to.contain(searchText.toLowerCase());
+        })
+      }
+      cy.get(SELECTORS.searchInput).clear();
+    })
+  }
+
+
+  let checkSearchInputWithNoTableRecords = (searchText: string) => {
+
+    typeSearchInput(searchText);
+
+    cy.get(SELECTORS.tableRows).should('have.length', '1');
+    cy.get(SELECTORS.searchInput).clear();
+
+  }
+
+
+  let typeSearchInput = (searchText: string) => {
 
     cy.intercept('GET', '/api/charts').as('getCharts');
     cy.get(SELECTORS.searchInput).type(searchText);
     cy.wait('@getCharts');
 
-    cy.get(SELECTORS.tableRows).its('length').then((length) => {
-
-      if (length > 1) {
-        for (let i = 1; i <= (length - 1); i++) {
-          cy.get(SELECTORS.tableRows).eq(i).find(SELECTORS.typographyItem).eq(0).invoke('text').then((text) => {
-            expect(text.toLowerCase()).to.contain(searchText.toLowerCase());
-          })
-        }
-      }
-      else cy.log('The \'searchText\' is not included in any chart name.');
-
-      cy.get(SELECTORS.searchInput).clear();
-
-    })
-
   }
+
+
 
 })
