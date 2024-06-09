@@ -68,9 +68,9 @@ describe('E2E Test Suite for My Charts app', () => {
     cy.get(SELECTORS.searchInput).type('chart');
     cy.get(SELECTORS.tableRows).its('length').should('be.gt', 1).then((length) => {
       checkAscendingSorting(0, false, length);
-      [1, 2].forEach((childNumber) => {
-        checkAscendingSorting(childNumber, true, length);
-      });
+      [1, 2].forEach((elNumber) => {
+        checkAscendingSorting(elNumber, true, length);
+      })
     })
 
   })
@@ -84,7 +84,7 @@ describe('E2E Test Suite for My Charts app', () => {
   })
 
 
-  let checkAscendingSorting = (childNumber: number, isDate: boolean, length: number) => {
+  let checkAscendingSorting = (elNumber: number, isDate: boolean, length: number) => {
 
     let value1: any;
     let value2: any;
@@ -92,15 +92,15 @@ describe('E2E Test Suite for My Charts app', () => {
     if (length > 2) {
       //checking two times two ensure that the sorting remains the same regardless of the clicks on the button
       for (let i = 1; i <= 2; i++) {
-        cy.get(SELECTORS.headerButton).eq(childNumber).click().should('have.css', 'font-weight', '700');
+        cy.get(SELECTORS.headerButton).eq(elNumber).click().should('have.css', 'font-weight', '700');
 
         for (let j = 1; j <= (length - 2); j++) {
-          cy.get(SELECTORS.tableRows).eq(j).find(SELECTORS.typographyItem).eq(childNumber).invoke('text').then((text) => {
+          cy.get(SELECTORS.tableRows).eq(j).find(SELECTORS.typographyItem).eq(elNumber).invoke('text').then((text) => {
             if (isDate) value1 = Date.parse(text);
             else value1 = text;
           })
 
-          cy.get(SELECTORS.tableRows).eq(j + 1).find(SELECTORS.typographyItem).eq(childNumber).invoke('text').then((text) => {
+          cy.get(SELECTORS.tableRows).eq(j + 1).find(SELECTORS.typographyItem).eq(elNumber).invoke('text').then((text) => {
             if (isDate) value2 = Date.parse(text);
             else value2 = text;
           })
@@ -117,7 +117,9 @@ describe('E2E Test Suite for My Charts app', () => {
 
   let checkSearchInput = (searchText: string) => {
 
+    cy.intercept('GET', '/api/charts').as('getCharts');
     cy.get(SELECTORS.searchInput).type(searchText);
+    cy.wait('@getCharts');
 
     cy.get(SELECTORS.tableRows).its('length').then((length) => {
 
@@ -128,7 +130,7 @@ describe('E2E Test Suite for My Charts app', () => {
           })
         }
       }
-      else cy.log('The \'searchText\' is not included in any chart name.')
+      else cy.log('The \'searchText\' is not included in any chart name.');
 
       cy.get(SELECTORS.searchInput).clear();
 
